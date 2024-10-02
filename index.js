@@ -6,9 +6,11 @@ const cors=require("cors")
 
 const authRoutes=require("./routes/auth")
 
+
 app.use(cors())
 app.use(express.json())
 app.use(express.static('public'))
+
 
 //routes
 app.use("/auth",authRoutes)
@@ -27,3 +29,10 @@ mongoose.connect(dbURI, {
   .catch((error) => {
     console.error('MongoDB connection error:', error);
   });
+
+app.get("/",(req,res)=>{
+  res.send("hello")
+})
+app.listen(PORT,(req,res)=>{
+  console.log(`hello`)
+});

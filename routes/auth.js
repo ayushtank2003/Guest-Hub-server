@@ -17,6 +17,10 @@ const storage=multer.diskStorage({
 
 const upload=multer({storage})
 
+router.get("/",()=>{
+    console.log("abcsd");
+})
+
 //user register
 router.post("/register",upload.single('profileImage'),async (req,res)=>{
     
@@ -26,14 +30,14 @@ router.post("/register",upload.single('profileImage'),async (req,res)=>{
         const {firstName,lastName,email,password}=req.body
 
         //the uploaded file is available as req.file
-        const profileImage=req.file
+        // const profileImage=req.file
 
-        if (!profileImage){
-            return res.status(400).send("No file uploaded")
-        }
+        // if (!profileImage){
+        //     return res.status(400).send("No file uploaded")
+        // }
 
         //path to the uploaded profile photo
-        const profileImagePath=profileImage.path
+        // const profileImagePath=profileImage.path
 
         //CHECK IF USER EXISTS
         const existingUser =await User.findOne({email})
@@ -53,7 +57,7 @@ router.post("/register",upload.single('profileImage'),async (req,res)=>{
             lastName,
             email,
             password:hashPassword,
-            profileImagePath,
+            // profileImagePath,
         });
 
         //save the newUser
@@ -63,7 +67,7 @@ router.post("/register",upload.single('profileImage'),async (req,res)=>{
 
         res.status(200).json({message:"user created succesfully! ",User:newUser})
                 
-    }catch{
+    }catch(err){
         console.log(err)
         res.status(500).json({message:"registration failed",error:err.message })
 
@@ -72,4 +76,33 @@ router.post("/register",upload.single('profileImage'),async (req,res)=>{
 
 
 //USER lOGIN
+
+router.post("/login",async(req,res)=>{
+    try{
+       // take the information from the form
+        const {email,password}=req.body
+
+        //check if user exist 
+        const user =await User.findOne({email})
+        if (!user){
+            return res.status(409).json({message:"user doesn't exist!"})
+        }
+
+        //Compare the password with the hashed password
+        const isMatch=await bcrypt.compare(password,user.password)
+        if(!isMatch){
+            return res.status(400).json({message:"invalide crediential"})
+        }
+
+        //generate jwt token
+        const token=jwt.sign({id:user._id},process.env.JWT_SECRET)
+        delete user.password
+
+        res.status(200).json({token,user})
+    }catch(err){
+        console.log(err)
+        res.status(500).json({error:err.message            })
+
+    }
+})
 module.exports=router
